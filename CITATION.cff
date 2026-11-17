@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use Neural Tidepool in teaching or research, please cite it as below."
+title: "Neural Tidepool: interactive experiments in computational neuroscience"
+abstract: >-
+  An interactive, browser-based laboratory for computational neuroscience.
+  Lab 1 simulates a leaky integrate-and-fire neuron with an exact event-driven
+  integrator, an independent Python reference engine, guided experimental
+  protocols, and reproducible experiment files.
+type: software
+authors:
+  - family-names: Li
+    given-names: Yunmo
+version: 0.3.1
+date-released: 2026-11-17
+license: MIT
+repository-code: "https://github.com/Yunmo0121/Neural-Tidepool"
+url: "https://yunmo0121.github.io/Neural-Tidepool/"
+keywords:
+  - computational neuroscience
+  - leaky integrate-and-fire
+  - spiking neuron
+  - simulation
+  - reproducibility
+  - education

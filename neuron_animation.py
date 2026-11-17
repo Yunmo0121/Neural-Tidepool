@@ -1,4 +1,4 @@
-"""A lightweight, event-driven neuron animation for NeuroVerse Ocean Lab.
+"""A lightweight, event-driven neuron animation for the Neural Tidepool Python edition.
 
 The visual flash times come from the LIF model's recorded spike events.
 Axon light travel is illustrative, not a biophysical conduction model.

@@ -1,8 +1,20 @@
-"""A small, educational leaky integrate-and-fire (LIF) neuron simulator."""
+"""Neural Tidepool reference engine: an event-driven leaky integrate-and-fire neuron.
 
+This is the Python reference implementation. The browser lab (docs/js/lif.js)
+follows exactly the same algorithm, and tests/test_parity.py checks that the two
+engines agree to within 1e-9 mV.
+"""
+
+import math
 from dataclasses import dataclass
+from typing import Union
 
 import numpy as np
+
+ENGINE_VERSION = "0.3.1"
+METHODS = ("exact", "euler")
+CurrentInput = Union[float, np.ndarray]
+_EPS = 1e-12
 
 
 @dataclass(frozen=True)
@@ -13,7 +25,7 @@ class SimulationResult:
 
 
 def simulate_lif(
-    current_na: float = 2.5,
+    current_na: CurrentInput = 2.5,
     duration_ms: float = 200.0,
     tau_ms: float = 20.0,
     threshold_mv: float = -50.0,
@@ -22,14 +34,27 @@ def simulate_lif(
     reset_mv: float = -70.0,
     resistance_mohm: float = 10.0,
     refractory_ms: float = 3.0,
+    method: str = "exact",
 ) -> SimulationResult:
-    """Simulate one LIF neuron with constant injected current using Euler steps.
+    """Simulate one LIF neuron, tau_m dV/dt = V_rest - V + R I.
 
     Units: time = ms, voltage = mV, resistance = MΩ, current = nA.
-    R(MΩ) * I(nA) gives a voltage in mV.
+    R (MΩ) × I (nA) gives a voltage in mV.
 
-    This model registers a spike at threshold, then resets the membrane voltage.
-    It intentionally does not simulate the biological action-potential waveform.
+    ``current_na`` is a constant current or an array with one value per sample.
+    The current is held constant over each step (zero-order hold): the step
+    from sample i - 1 to sample i uses ``current[i - 1]``.
+
+    ``method="exact"`` uses the closed-form solution of the linear ODE within a
+    step and the exact threshold-crossing time. ``method="euler"`` uses forward
+    Euler with the crossing time found by linear interpolation.
+
+    A spike at time t* resets V to ``reset_mv`` and clamps it until
+    t* + ``refractory_ms``; integration then resumes from that exact moment, so
+    spike times and refractory periods are not rounded to the time grid.
+
+    ``voltage_mv`` is the true membrane state at each sample time. The spike
+    itself is an event, reported in ``spike_times_ms``.
     """
     if duration_ms <= 0 or dt_ms <= 0 or tau_ms <= 0:
         raise ValueError("Duration, time step, and membrane time constant must be positive.")
@@ -39,34 +64,62 @@ def simulate_lif(
         raise ValueError("Threshold must exceed resting and reset voltages.")
     if dt_ms >= tau_ms:
         raise ValueError("Time step must be smaller than membrane time constant.")
+    if method not in METHODS:
+        raise ValueError(f"Unknown integration method: {method}")
 
-    # End time is included when duration is a multiple of dt.
-    time_ms = np.arange(0.0, duration_ms + dt_ms * 0.5, dt_ms)
-    voltage_mv = np.empty(len(time_ms), dtype=float)
+    # Same samples as the JavaScript engine: 0, dt, 2 dt, ... up to the duration.
+    n = math.ceil((duration_ms + dt_ms * 0.5) / dt_ms)
+    time_ms = np.arange(n, dtype=float) * dt_ms
+
+    if np.ndim(current_na) == 0:
+        current = np.full(n, float(current_na))
+    else:
+        current = np.asarray(current_na, dtype=float)
+        if current.shape != time_ms.shape:
+            raise ValueError(f"Current trace needs {n} samples, got {current.size}.")
+
+    voltage_mv = np.empty(n, dtype=float)
     voltage_mv[0] = resting_mv
     spike_times = []
+    v = resting_mv
+    ref_left = 0.0
 
-    reset_steps = max(1, int(np.ceil(refractory_ms / dt_ms)))
-    last_spike_step = None
+    for i in range(1, n):
+        v_inf = resting_mv + resistance_mohm * float(current[i - 1])
+        t_start = float(time_ms[i - 1])
+        left = float(time_ms[i] - time_ms[i - 1])
+        while left > _EPS:
+            if ref_left > 0:
+                if ref_left >= left - _EPS:
+                    ref_left = max(0.0, ref_left - left)
+                    v = reset_mv
+                    left = 0.0
+                    break
+                t_start += ref_left
+                left -= ref_left
+                ref_left = 0.0
+                v = reset_mv
 
-    for i in range(1, len(time_ms)):
-        if last_spike_step is not None and i - last_spike_step <= reset_steps:
-            voltage_mv[i] = reset_mv
-            continue
+            crossing = None
+            if method == "exact":
+                v_new = v_inf + (v - v_inf) * math.exp(-left / tau_ms)
+                if v_new >= threshold_mv and v_inf > threshold_mv:
+                    crossing = t_start + tau_ms * math.log((v - v_inf) / (threshold_mv - v_inf))
+            else:
+                v_new = v + (left / tau_ms) * (v_inf - v)
+                if v_new >= threshold_mv:
+                    crossing = t_start + left * (threshold_mv - v) / (v_new - v)
 
-        previous = voltage_mv[i - 1]
-        dv = (dt_ms / tau_ms) * (
-            resting_mv - previous + resistance_mohm * current_na
-        )
-        candidate = previous + dv
-
-        if candidate >= threshold_mv:
-            # Record the spike event at its threshold; next sample resets.
-            voltage_mv[i] = threshold_mv
-            spike_times.append(time_ms[i])
-            last_spike_step = i
-        else:
-            voltage_mv[i] = candidate
+            if crossing is None:
+                v = v_new
+                break
+            crossing = min(max(crossing, t_start), t_start + left)
+            spike_times.append(crossing)
+            v = reset_mv
+            ref_left = refractory_ms
+            left -= crossing - t_start
+            t_start = crossing
+        voltage_mv[i] = v
 
     return SimulationResult(
         time_ms=time_ms,

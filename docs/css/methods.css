@@ -1,0 +1,38 @@
+/* Methods page: a calm, readable technical document. */
+body.doc { background: #fff; }
+.doc-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  max-width: 1080px; margin: 0 auto; padding: 20px 24px; border-bottom: 1px solid var(--line);
+}
+.doc-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ocean-deep); font-family: var(--serif); font-weight: 600; font-size: 22px; }
+.doc-back { font-size: 14px; font-weight: 600; color: var(--ocean); }
+
+.doc-body { max-width: 760px; margin: 0 auto; padding: 40px 24px 24px; }
+.doc-body h1 { font-family: var(--serif); font-weight: 600; font-size: 38px; line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); }
+.doc-meta { margin-top: 12px; color: var(--ink-soft); font-size: 15px; }
+.doc-toc { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 24px 0 8px; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 14px; }
+.doc-toc a { color: var(--ocean); font-weight: 600; text-decoration: none; }
+.doc-toc a:hover { text-decoration: underline; }
+
+.doc-body section { margin-top: 40px; scroll-margin-top: 16px; }
+.doc-body h2 { font-size: 22px; font-weight: 700; color: var(--ink); }
+.doc-body h3 { margin-top: 22px; font-size: 16px; font-weight: 700; color: var(--ocean-deep); }
+.doc-body p, .doc-body li { font-family: var(--serif); font-size: 17.5px; line-height: 1.65; color: #1f3d4f; }
+.doc-body p { margin-top: 12px; }
+.doc-body ul, .doc-body ol { margin: 12px 0 0; padding-left: 22px; display: grid; gap: 8px; }
+.doc-body code { font-size: 0.86em; background: var(--line-soft); padding: 1px 5px; border-radius: 4px; }
+.m-block { margin: 14px 0; overflow-x: auto; overflow-y: hidden; }
+.m-block .katex-display { margin: 0.4em 0; }
+
+.table-wrap { margin-top: 14px; overflow-x: auto; }
+.doc-body table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.doc-body th { text-align: left; font-weight: 700; color: var(--ink); padding: 8px 10px; border-bottom: 2px solid var(--line); white-space: nowrap; }
+.doc-body td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; color: #1f3d4f; }
+.doc-body table.params td:nth-child(3), .doc-body table.params td:nth-child(4) { white-space: nowrap; }
+.refs li { font-size: 15.5px; }
+
+@media (max-width: 600px) {
+  .doc-body { padding-top: 28px; }
+  .doc-body h1 { font-size: 30px; }
+  .doc-body p, .doc-body li { font-size: 16.5px; }
+}

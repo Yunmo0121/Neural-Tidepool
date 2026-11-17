@@ -1,5 +1,5 @@
 
-"""Unit tests for the NeuroVerse neuron animation."""
+"""Unit tests for the Neural Tidepool neuron animation (Python edition)."""
 
 import unittest
 

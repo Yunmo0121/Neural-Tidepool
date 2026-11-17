@@ -1,4 +1,4 @@
-"""NeuroVerse Ocean Lab v0.2 — an interactive glowing LIF neuron."""
+"""Neural Tidepool, Python edition: an interactive glowing LIF neuron."""
 
 import plotly.graph_objects as go
 import streamlit as st
@@ -6,7 +6,7 @@ import streamlit as st
 from neuron import simulate_lif
 from neuron_animation import make_neuron_animation
 
-st.set_page_config(page_title="NeuroVerse | Ocean Lab", page_icon="🌊", layout="wide")
+st.set_page_config(page_title="Neural Tidepool", page_icon="🌊", layout="wide")
 
 st.markdown(
     """
@@ -30,7 +30,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("🌊 NeuroVerse")
+st.title("🌊 Neural Tidepool")
 st.caption("OCEAN LAB  /  MINI NEURON LAB  /  COMPUTATIONAL NEUROSCIENCE")
 st.write(
     "Explore how a simplified neuron integrates electrical current and generates spikes. "
@@ -136,4 +136,4 @@ with st.expander("🔬 What is the LIF model?"):
         """
     )
 
-st.caption("Made with curiosity, Python & a little ocean breeze 🌊 · NeuroVerse v0.2")
+st.caption("Made with curiosity, Python & a little ocean breeze 🌊 · Neural Tidepool, Python edition (the full lab lives in docs/)")

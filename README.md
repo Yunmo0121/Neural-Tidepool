@@ -1,304 +1,190 @@
-# 🌊 NeuroVerse
+<p align="center">
+  <img src="docs/assets/logo.svg" width="96" alt="Neural Tidepool logo: a tide pool whose water surface is a spiking voltage trace">
+</p>
 
-### An Interactive Mini Lab for Computational Neuroscience
+<h1 align="center">Neural Tidepool</h1>
 
-**NeuroVerse** is a small, interactive neuroscience playground built with Python, NumPy, Plotly, and Streamlit.
+<p align="center">Interactive experiments in computational neuroscience</p>
 
-It started with a simple question:
+<p align="center">
+  <a href="https://github.com/Yunmo0121/Neural-Tidepool/actions/workflows/tests.yml"><img src="https://github.com/Yunmo0121/Neural-Tidepool/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+  <a href="https://yunmo0121.github.io/Neural-Tidepool/"><img src="https://img.shields.io/badge/live%20lab-open-176F93" alt="Open the live lab"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-176F93" alt="MIT licence"></a>
+</p>
 
-_How can we use mathematics and programming to understand the way neurons respond to electrical signals?_
+<p align="center">
+  <a href="https://yunmo0121.github.io/Neural-Tidepool/"><b>Open the lab</b></a> &nbsp;|&nbsp;
+  <a href="https://yunmo0121.github.io/Neural-Tidepool/methods.html">Methods</a> &nbsp;|&nbsp;
+  <a href="#quick-start">Quick start</a>
+</p>
 
-This project explores that question through a simplified **Leaky Integrate-and-Fire (LIF)** neuron model, combining numerical simulation, interactive visualisation, and a little creativity.
+![Lab 1 of Neural Tidepool: stimulus controls, an animated neuron, an oscilloscope comparing two recorded runs, and guided protocols](docs/assets/screenshot.png)
 
-Welcome to my tiny neuroscience laboratory! 🧠
+## What it is
 
----
+Neural Tidepool is a laboratory for computational neuroscience that runs in the browser. Each lab poses a scientific question, gives you a model to experiment on, and provides the instruments to measure what happens.
 
-## ✨ Overview
+**Lab 1** asks: *how does a neuron turn an input current into spikes, and what limits how fast it can fire?* You stimulate a leaky integrate-and-fire neuron, watch its membrane voltage on an oscilloscope, record runs in a notebook, and compare what you measure with exact theory.
 
-NeuroVerse allows users to explore how a neuron's membrane potential changes in response to electrical stimulation.
+It is written for students meeting neuron models for the first time, and for anyone who wants to check the numbers: every result is computed exactly, documented and reproducible.
 
-By adjusting model parameters, users can observe neuronal firing patterns, explore spike generation, and develop an intuitive understanding of basic computational neuroscience concepts.
+## Lab 1: Single neuron
 
-The project is designed to be both an educational tool and a personal exploration of scientific computing.
+- **Stimulus.** Six input currents: constant, step, pulse, two pulses, sine, and coloured noise with a fixed random seed.
+- **Oscilloscope.** Membrane voltage and injected current on two channels, synchronised with an animated neuron, with A/B cursors for measuring time and voltage differences.
+- **Readouts.** Spike count, mean rate, ISI rate, coefficient of variation, first-spike latency and rheobase, each labelled with its definition and shown as n/a when it is undefined.
+- **Analysis.** The simulated f–I curve plotted against its exact formula, and the time-step accuracy of two numerical methods.
+- **Six guided protocols.** Find the rheobase, measure the f–I curve, the refractory speed limit, temporal summation, firing from noise, and how small the time step should be. Each one asks for a prediction first and ends with an explanation and textbook references.
+- **Notebook.** Record runs, overlay them on the oscilloscope, restore any run exactly, save experiment files and notebooks, and export CSV.
+- **Guided mode.** A short explanation next to every parameter and instrument for first-time users.
 
-### Key Features
+## Why you can trust the numbers
 
-- **Interactive Neuron Simulation** — Simulate a single neuron using the LIF model.
-- **Adjustable Parameters** — Experiment with input current, membrane time constant, firing threshold, and simulation duration.
-- **Membrane Potential Visualisation** — Explore voltage changes and spike events through interactive Plotly graphs.
-- **Spike Analysis** — Track spike counts and average firing rates.
-- **Glowing Neuron Animation** — Watch a neuron light up in response to simulated spike events.
-- **Playback Controls** — Pause, replay, and adjust animation speed.
-- **Ocean Lab Interface** — A clean, ocean-inspired scientific dashboard.
+**Exact integration.** Between spikes the LIF equation is linear and is solved in closed form, $V(t+h) = V_\infty + (V(t) - V_\infty)\,e^{-h/\tau_m}$. Threshold crossings are located exactly, and the refractory period starts at the exact spike time, so nothing is rounded to the time grid. The measured error in spike times is around $10^{-13}$ ms, which is floating-point rounding. Forward Euler is included for comparison.
 
----
+**Two independent implementations.** The simulator exists twice: in JavaScript for the browser ([`docs/js/lif.js`](docs/js/lif.js)) and in Python ([`neuron.py`](neuron.py)). A parity test runs every waveform with both integrators, two time steps and two refractory periods in both languages, and requires them to agree to within $10^{-9}$.
 
-## 🌊 Ocean Lab Edition
+**Checked against theory.** The tests compare the simulation with exact results: the rheobase, the first-spike time, the f–I curve (to six decimal places) and the first-order convergence of Euler's method.
 
-NeuroVerse features a minimal, ocean-inspired interface, designed to make scientific exploration visually engaging without sacrificing clarity.
+**Reproducible.** Every recorded run is saved as an experiment file holding every parameter, the random seed, the time step, the integrator, the engine version and the spike times. Any experiment file can be re-run outside the browser:
 
-The colour palette includes:
-
-| Colour     | Hex       | Purpose                    |
-| ---------- | --------- | -------------------------- |
-| Ice Blue   | `#F6FAFC` | Main background            |
-| Ocean Blue | `#176F93` | Primary interface elements |
-| Aqua       | `#76BCCC` | Visual accents             |
-| Coral      | `#F18B6D` | Spike markers              |
-
-The goal is simple: **make computational neuroscience approachable, interactive, and visually enjoyable.**
-
----
-
-## 🛠️ Tech Stack
-
-| Technology              | Purpose                                   |
-| ----------------------- | ----------------------------------------- |
-| Python                  | Core simulation logic                     |
-| NumPy                   | Numerical computation                     |
-| Plotly                  | Interactive scientific visualisation      |
-| Streamlit               | Web-based user interface                  |
-| HTML / CSS / JavaScript | Animated neuron visualisation             |
-| unittest                | Automated testing                         |
-| Git & GitHub            | Version control and project documentation |
-
----
-
-## Getting Started
-
-### 1. Clone the repository
-
-Once the project is published on GitHub:
-
-```bash
-git clone https://github.com/Yunmo0121/NeuroVerse.git
-cd NeuroVerse
+```console
+$ python reproduce.py neural-tidepool-run-1.json
+Spikes:         recorded 8, reproduced 8
+Max difference: 0.000e+00 ms
+Result:         REPRODUCED
 ```
 
-Alternatively, download the project files and open the folder in VS Code.
+**Documented.** The [Methods](https://yunmo0121.github.io/Neural-Tidepool/methods.html) page gives the model, the numerical scheme, every stimulus formula, the definition of every measurement, the parameter table and the known limitations.
 
-### 2. Set up a virtual environment
+**Tested on every push** with GitHub Actions.
 
-Python 3.11 or later is recommended.
+## Quick start
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
+### Use it online
 
-### 3. Install dependencies
+Open **[yunmo0121.github.io/Neural-Tidepool](https://yunmo0121.github.io/Neural-Tidepool/)**. Nothing to install.
 
-```bash
-python -m pip install -r requirements.txt
-```
-
-### 4. Launch NeuroVerse
+### Run it locally
 
 ```bash
-python -m streamlit run app.py
+git clone https://github.com/Yunmo0121/Neural-Tidepool.git
+cd Neural-Tidepool
+python -m http.server --directory docs 8000
 ```
 
-Open the local URL displayed in the terminal, typically:
+Then open `http://localhost:8000`. The page must be served over HTTP, because browsers do not load JavaScript modules from `file://`.
 
-`http://localhost:8501`
-
-Your neuron laboratory is ready to explore!
-
-### 5. Run automated tests
+### Reproduce an experiment in Python
 
 ```bash
-python -m unittest discover -s tests -v
+pip install numpy
+python reproduce.py path/to/experiment.json            # compare with the recorded spike times
+python reproduce.py path/to/experiment.json --csv out.csv  # also write the trace
 ```
 
----
+### Run the tests
 
-## 🔬 Understanding the LIF Model
+```bash
+python -m unittest discover -s tests -v   # Python engine, theory, parity, reproduction
+node --test tests/js/*.test.js            # JavaScript engine
+```
 
-NeuroVerse uses the **Leaky Integrate-and-Fire (LIF)** model, a simplified mathematical representation of neuronal behaviour.
+The cross-language tests need Node.js and are skipped without it.
 
-The model describes how membrane potential evolves as a neuron receives electrical input.
+### Python edition
 
-### Governing Equation
+The original Streamlit interface is kept as a compact Python companion to the browser lab. It simulates a single neuron with constant input.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+## The model
+
+Lab 1 uses the leaky integrate-and-fire neuron:
 
 $$
-\tau_m \frac{dV}{dt} = V_{\mathrm{rest}} - V + RI
+\tau_m \frac{dV}{dt} = V_{\mathrm{rest}} - V + R\,I(t)
 $$
 
-Where:
+When $V$ reaches the threshold $\theta$, a spike is recorded, $V$ is reset to $V_{\mathrm{reset}}$ and held there for the refractory period $t_{\mathrm{ref}}$. With the default parameters ($\tau_m = 20$ ms, $\theta = -50$ mV, $V_{\mathrm{rest}} = -65$ mV, $V_{\mathrm{reset}} = -70$ mV, $R = 10$ MΩ, $t_{\mathrm{ref}} = 3$ ms) the neuron starts firing above 1.5 nA and fires at about 40 Hz at 2.5 nA. The [Methods](https://yunmo0121.github.io/Neural-Tidepool/methods.html) page has the full details.
 
-| Symbol                 | Description                |
-| ---------------------- | -------------------------- |
-| \(V\)                  | Membrane potential         |
-| \(\tau_m\)             | Membrane time constant     |
-| \(V\_{\mathrm{rest}}\) | Resting membrane potential |
-| \(R\)                  | Membrane resistance        |
-| \(I\)                  | Input current              |
-
-### How It Works
-
-1. **Input:** The neuron receives an electrical current.
-2. **Integration:** Its membrane potential evolves in response to the input.
-3. **Threshold:** A spike event is recorded when the voltage reaches the firing threshold.
-4. **Reset:** The membrane potential returns to a reset value.
-5. **Refractory Period:** The neuron temporarily remains at the reset potential before resuming integration.
-
-The differential equation is approximated numerically using the **Forward Euler method**.
-
-The current simulation uses a fixed time step of `0.1 ms`, with default resting and reset potentials of `-65 mV` and `-70 mV`, respectively.
-
----
-
-## ⚡ Glowing Neuron Animation
-
-Introduced in **v0.2**, the glowing neuron animation provides a visual representation of neuronal firing activity.
-
-The neuron illuminates when a spike is detected by the LIF simulation, followed by an animated signal travelling along an illustrated axon.
-
-Users can:
-
-- Observe the relationship between electrical stimulation and spike activity.
-- Adjust input parameters and explore changes in firing behaviour.
-- Pause and replay the animation.
-- Change playback speed.
-
-**Scientific note:** The animation is synchronised with simulated spike times, but the travelling light is a conceptual visual effect. It does not simulate biological conduction velocity or the detailed shape of an action potential.
-
----
-
-## Experiments to Try
-
-### Experiment 01 — Resting Neuron
-
-Set the input current to `0 nA`.
-
-Observe the membrane potential and check whether any spike events occur.
-
-**Question:** Why does the neuron remain at its resting potential?
-
-### Experiment 02 — Electrical Stimulation
-
-Increase the input current to `2.5 nA`.
-
-Observe how the membrane potential approaches the firing threshold and resets after each spike.
-
-**Question:** How does increasing the input current affect the firing rate?
-
-### Experiment 03 — Threshold Sensitivity
-
-Keep the input current constant and change the spike threshold.
-
-**Question:** How does the threshold influence neuronal excitability?
-
-These experiments provide a starting point for understanding how model parameters influence neuronal behaviour.
-
----
-
-## Project Structure
+## Project structure
 
 ```text
-NeuroVerse/
-│
-├── app.py                    # Streamlit application
-├── neuron.py                 # LIF simulation engine
-├── neuron_animation.py       # Animated neuron visualisation
-│
-├── tests/
-│   └── test_neuron.py        # Unit tests
-│
-├── .streamlit/
-│   └── config.toml           # Ocean Lab theme
-│
-├── requirements.txt          # Project dependencies
-├── README.md                 # Documentation
-└── .gitignore
+Neural-Tidepool/
+├── docs/                    The browser lab, served by GitHub Pages
+│   ├── index.html           Lab 1
+│   ├── methods.html         Methods: model, numerics, definitions, parameters
+│   ├── js/
+│   │   ├── lif.js           Simulation engine, stimuli and theory
+│   │   ├── experiment.js    Experiment and notebook file formats
+│   │   ├── protocols.js     Guided experiments
+│   │   └── app.js           Instruments and interface
+│   ├── css/                 Styles
+│   ├── assets/              Logo and screenshot
+│   └── vendor/              KaTeX and fonts, bundled so the site works offline
+├── neuron.py                Python reference engine
+├── stimulus.py              Stimulus waveforms, identical to the browser's
+├── reproduce.py             Re-run an experiment file in Python
+├── app.py                   Streamlit Python edition
+├── neuron_animation.py      Animation for the Python edition
+├── tests/                   Python and JavaScript tests
+└── .github/workflows/       Continuous integration
 ```
 
-The simulation logic is separated from the interface and animation code to improve readability, testing, and future development.
+## Roadmap
 
----
+| Lab | Question | Status |
+| --- | --- | --- |
+| 1. Single neuron | How does a neuron turn an input current into spikes? | Available |
+| 2. Synapse | How does one neuron pass a signal to another? | Planned for v0.4 |
+| 3. Synchrony | Why do coupled neurons fall into step? | Planned for v0.4 |
+| 4. Learning | How can spiking networks learn, through STDP and through surrogate gradients? | Planned for v0.5 |
+| 5. Hodgkin–Huxley | Where do spikes come from, in terms of ion channels? | Planned for v1.0 |
 
-## 🚀 Development Roadmap
+Still to come for Lab 1: a validation page that checks every analytic result live, golden-file regression tests, and a more detailed neuron illustration.
 
-### v0.1 — Mini Neuron Lab
+<details>
+<summary>Version history</summary>
 
-- [x] Implement a single LIF neuron model
-- [x] Simulate membrane potential over time
-- [x] Detect spike events
-- [x] Add interactive parameter controls
-- [x] Visualise results using Plotly
-- [x] Add initial automated tests
-- [x] Design the Ocean Lab interface
+- **v0.3.1**: exact event-driven engine, reproducible experiment files and notebook, Python reproduction script, Methods page, guided mode.
+- **v0.3**: the browser lab bench, with stimulus waveforms, oscilloscope, notebook, protocols and analysis.
+- **v0.2**: an animated neuron whose glow follows the simulated spikes.
+- **v0.1**: a Streamlit app simulating a leaky integrate-and-fire neuron.
 
-### v0.2 — Glowing Neuron
+</details>
 
-- [x] Implement an animated neuron visualisation
-- [x] Synchronise animation with simulated spikes
-- [x] Add pause, replay, and playback speed controls
-- [x] Improve graph layout and visual presentation
+## References
 
-### v0.3 — Experimental Playground
+- W. Gerstner, W. M. Kistler, R. Naud and L. Paninski, *[Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition](https://neuronaldynamics.epfl.ch/online/)*, Cambridge University Press, 2014. Lab 1 follows §1.3 (integrate-and-fire models), §7.3 (interval distributions) and §8.1 (noise input).
+- D. T. Gillespie, Exact numerical simulation of the Ornstein–Uhlenbeck process and its integral, *Physical Review E* 54, 2084 (1996).
+- The full list is on the [Methods](https://yunmo0121.github.io/Neural-Tidepool/methods.html#references) page.
 
-- [ ] Introduce pulse-based and time-varying input currents
-- [ ] Compare membrane potential under different conditions
-- [ ] Add experiment comparison charts
-- [ ] Expand automated tests
+## About
 
-### Future Development
+Neural Tidepool began, under the name NeuroVerse, as a small personal project driven by curiosity about computational neuroscience.
 
-- [ ] Simulate small networks of connected neurons
-- [ ] Explore simple synaptic interactions
-- [ ] Add reproducible experiment examples
-- [ ] Publish an online interactive demo
-- [ ] Add demo screenshots and scientific references
+I'm a computer science student interested in how mathematics and programming can help us understand biological systems. This project is where I practise that: mathematical modelling, numerical methods, scientific visualisation, testing, and explaining science through software. One of my favourite parts is watching an abstract equation become something you can poke at and see respond.
 
----
+I hope Neural Tidepool keeps growing, one lab at a time, into a place where anyone can experiment with neural models and trust what they see. Thanks for visiting!
 
-## Limitations
+## License and citation
 
-NeuroVerse is an **educational simulation**, rather than a biologically detailed representation of neuronal activity.
+Neural Tidepool is released under the [MIT License](LICENSE). It bundles [KaTeX](https://katex.org) (MIT License) and the Instrument Sans and Newsreader fonts (SIL Open Font License 1.1); their licences are included in `docs/vendor/`.
 
-The current model assumes:
+If you use Neural Tidepool in teaching or research, please cite it. GitHub's **Cite this repository** button gives the reference from [`CITATION.cff`](CITATION.cff), or use:
 
-- A single simplified neuron
-- Constant external input current
-- Fixed model parameters during each simulation
-- No synaptic connections or biological noise
-- No detailed action potential waveform
-
-The neuron animation is intended to illustrate spike events, not to reproduce the exact electrical behaviour of biological neurons.
-
-The project is not intended for medical or clinical applications.
-
----
-
-## What I'm Learning
-
-NeuroVerse is part of my personal exploration of the intersection between **Computer Science, Mathematics, and Neuroscience**.
-
-Through this project, I'm developing practical experience in:
-
-- Mathematical modelling and differential equations
-- Numerical simulation with Python
-- Scientific data visualisation
-- Interactive application development
-- Software testing and modular design
-- Communicating scientific ideas through software
-
-One of my favourite parts of programming is discovering how abstract mathematical ideas can become something interactive and visual.
-
----
-
-## A Note From the Developer
-
-NeuroVerse began as a small personal project driven by curiosity about computational neuroscience.
-
-As I continue learning computer science, I'm particularly interested in exploring how programming and mathematics can help us investigate complex biological systems.
-
-This project is still evolving, and I hope to gradually expand it into a more comprehensive environment for experimenting with simple neural models.
-
-Thanks for visiting NeuroVerse!
-
-_Built with Python, curiosity, and a little ocean inspiration._ 🌊
-
-**NeuroVerse | Ocean Lab Edition | v0.2**
+```bibtex
+@software{li_neural_tidepool_2026,
+  author  = {Li, Yunmo},
+  title   = {Neural Tidepool: interactive experiments in computational neuroscience},
+  year    = {2026},
+  version = {0.3.1},
+  url     = {https://github.com/Yunmo0121/Neural-Tidepool}
+}
+```

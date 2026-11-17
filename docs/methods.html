@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Methods · Neural Tidepool</title>
+  <meta name="description" content="Model, numerical methods, stimuli, measurements and parameters of the Neural Tidepool single-neuron lab." />
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="vendor/fonts/fonts.css" />
+  <link rel="stylesheet" href="vendor/katex/katex.min.css" />
+  <link rel="stylesheet" href="css/lab.css" />
+  <link rel="stylesheet" href="css/methods.css" />
+</head>
+<body class="doc">
+  <header class="doc-head">
+    <a class="doc-brand" href="index.html"><img src="assets/logo.svg" alt="" width="34" height="34" /><span>Neural Tidepool</span></a>
+    <a class="doc-back" href="index.html">Back to Lab 1</a>
+  </header>
+
+  <main class="doc-body">
+    <h1>Methods: Lab 1, Single neuron</h1>
+    <p class="doc-meta">Engine version <span id="engineVersion">0.3.1</span>. This page describes exactly what the lab computes, so that every number it shows can be checked and reproduced.</p>
+
+    <nav class="doc-toc" aria-label="Sections">
+      <a href="#model">Model</a><a href="#numerics">Numerical method</a><a href="#stimuli">Stimuli</a><a href="#measurements">Measurements</a><a href="#parameters">Parameters</a><a href="#reproducibility">Reproducibility</a><a href="#limitations">Limitations</a><a href="#references">References</a>
+    </nav>
+
+    <section id="model">
+      <h2>Model</h2>
+      <p>The lab simulates a single leaky integrate-and-fire (LIF) neuron driven by an injected current <span class="m">\(I(t)\)</span>. Below threshold the membrane potential obeys</p>
+      <div class="m-block">$$\tau_m \frac{dV}{dt} = V_{\mathrm{rest}} - V + R\,I(t),$$</div>
+      <p>where <span class="m">\(\tau_m\)</span> is the membrane time constant and <span class="m">\(R\)</span> the membrane resistance. With time in ms, resistance in MΩ and current in nA, the product <span class="m">\(RI\)</span> is in mV.</p>
+      <p>When <span class="m">\(V\)</span> reaches the threshold <span class="m">\(\theta\)</span> at time <span class="m">\(t^{*}\)</span>, a spike is recorded at <span class="m">\(t^{*}\)</span>, the potential is reset to <span class="m">\(V_{\mathrm{reset}}\)</span>, and it is held there for the absolute refractory period <span class="m">\(t_{\mathrm{ref}}\)</span>. Integration resumes at <span class="m">\(t^{*} + t_{\mathrm{ref}}\)</span>. The spike is an event; the model does not describe the shape of the action potential.</p>
+      <p>The parameters must satisfy <span class="m">\(\tau_m &gt; 0\)</span>, <span class="m">\(R &gt; 0\)</span>, <span class="m">\(t_{\mathrm{ref}} \ge 0\)</span> and <span class="m">\(\theta &gt; \max(V_{\mathrm{rest}}, V_{\mathrm{reset}})\)</span>; the lab refuses settings that break these conditions.</p>
+    </section>
+
+    <section id="numerics">
+      <h2>Numerical method</h2>
+      <h3>Time grid and input</h3>
+      <p>Results are reported on the grid <span class="m">\(t_k = k\,\Delta t\)</span>, <span class="m">\(k = 0, 1, \dots, n-1\)</span>, with <span class="m">\(n = \lceil (T + \Delta t/2)/\Delta t \rceil\)</span> for a recording of length <span class="m">\(T\)</span>. The input is held constant within each step (zero-order hold): on <span class="m">\([t_{k-1}, t_k)\)</span> the current is <span class="m">\(I_{k-1} = I(t_{k-1})\)</span>. The simulation starts at rest, <span class="m">\(V(0) = V_{\mathrm{rest}}\)</span>.</p>
+
+      <h3>Exact integrator (default)</h3>
+      <p>For a constant current the equation is linear and has the closed-form solution</p>
+      <div class="m-block">$$V(t+h) = V_\infty + \big(V(t) - V_\infty\big)\,e^{-h/\tau_m}, \qquad V_\infty = V_{\mathrm{rest}} + R\,I.$$</div>
+      <p>If <span class="m">\(V_\infty &gt; \theta\)</span> and the update reaches the threshold, the crossing time is found exactly:</p>
+      <div class="m-block">$$t^{*} = t + \tau_m \ln\frac{V(t) - V_\infty}{\theta - V_\infty}.$$</div>
+      <p>For an input that is piecewise constant on the grid, the only error of this method is floating-point rounding. The Analysis panel measures it at around <span class="m">\(10^{-13}\)</span> ms.</p>
+
+      <h3>Forward Euler (for comparison)</h3>
+      <p>The Euler update is <span class="m">\(V(t+h) = V(t) + (h/\tau_m)\,(V_\infty - V(t))\)</span>. When it crosses threshold, the crossing time is found by linear interpolation, <span class="m">\(t^{*} = t + h\,(\theta - V(t))/(V(t+h) - V(t))\)</span>. Its error in spike times is proportional to <span class="m">\(\Delta t\)</span>.</p>
+
+      <h3>Events inside a step</h3>
+      <p>Spikes and the end of a refractory period can fall anywhere inside a step. The engine processes each step as a sequence of sub-intervals: it consumes any remaining refractory time, integrates from <span class="m">\(V_{\mathrm{reset}}\)</span> from the exact moment the refractory period ends, and, after a spike at <span class="m">\(t^{*}\)</span>, continues from <span class="m">\(t^{*}\)</span> with the rest of the step. Spike times and refractory periods are therefore never rounded to the grid. The stored trace <span class="m">\(V_k\)</span> is the true membrane state at <span class="m">\(t_k\)</span>; it never exceeds <span class="m">\(\theta\)</span>.</p>
+
+      <h3>Two independent implementations</h3>
+      <p>The algorithm is implemented in JavaScript for the browser (<code>docs/js/lif.js</code>) and in Python (<code>neuron.py</code>). An automated test runs every waveform with both integrators, two time steps and two refractory periods in both languages and requires the traces and spike times to agree to within <span class="m">\(10^{-9}\)</span>.</p>
+    </section>
+
+    <section id="stimuli">
+      <h2>Stimuli</h2>
+      <p>All currents are in nA and times in ms. <span class="m">\(H\)</span> is the unit step and <span class="m">\(\mathbf{1}\)</span> the indicator of an interval.</p>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Waveform</th><th>Current</th><th>Parameters</th></tr></thead>
+        <tbody>
+          <tr><td>Constant</td><td class="m">\(I(t) = A\)</td><td>amplitude <span class="m">\(A\)</span></td></tr>
+          <tr><td>Step</td><td class="m">\(I(t) = A\,H(t - t_0)\)</td><td>amplitude, start <span class="m">\(t_0\)</span></td></tr>
+          <tr><td>Pulse</td><td class="m">\(I(t) = A\,\mathbf{1}[t_0 \le t &lt; t_0 + w]\)</td><td>amplitude, start, width <span class="m">\(w\)</span></td></tr>
+          <tr><td>Two pulses</td><td class="m">\(A\,\mathbf{1}[t_0 \le t &lt; t_0 + w] + A\,\mathbf{1}[t_0 + g \le t &lt; t_0 + g + w]\)</td><td>amplitude, start, width, gap <span class="m">\(g\)</span> (start to start); overlapping pulses do not add</td></tr>
+          <tr><td>Sine</td><td class="m">\(I(t) = I_0 + A \sin(2\pi f t / 1000)\)</td><td>offset <span class="m">\(I_0\)</span>, swing <span class="m">\(A\)</span>, frequency <span class="m">\(f\)</span> in Hz</td></tr>
+          <tr><td>Noisy</td><td class="m">\(I(t) = \mu + \sigma\,\eta(t)\)</td><td>mean <span class="m">\(\mu\)</span>, noise size <span class="m">\(\sigma\)</span>, seed</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>The noise <span class="m">\(\eta\)</span> is an Ornstein–Uhlenbeck process with zero mean, unit variance and correlation time <span class="m">\(\tau_\eta = 5\)</span> ms. It is sampled with the exact update</p>
+      <div class="m-block">$$\eta_k = a\,\eta_{k-1} + \sqrt{1 - a^2}\;\xi_k, \qquad a = e^{-\Delta t/\tau_\eta}, \qquad \xi_k \sim \mathcal{N}(0, 1),$$</div>
+      <p>starting from the stationary distribution, <span class="m">\(\eta_0 \sim \mathcal{N}(0,1)\)</span>. Its statistics therefore do not depend on <span class="m">\(\Delta t\)</span>. Normal deviates come from the Box–Muller transform applied to the 32-bit mulberry32 generator, seeded with the integer seed. The Python engine contains a bit-for-bit copy of this generator, so a seed gives the same current in both languages.</p>
+    </section>
+
+    <section id="measurements">
+      <h2>Measurements</h2>
+      <p>Let <span class="m">\(t_1 &lt; t_2 &lt; \dots &lt; t_N\)</span> be the spike times in a recording of length <span class="m">\(T\)</span>, and <span class="m">\(\Delta_j = t_{j+1} - t_j\)</span> the <span class="m">\(N-1\)</span> inter-spike intervals (ISIs).</p>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Readout</th><th>Definition</th><th>Defined when</th></tr></thead>
+        <tbody>
+          <tr><td>Spikes</td><td class="m">\(N\)</td><td>always</td></tr>
+          <tr><td>Mean rate</td><td class="m">\(N / T\)</td><td>always</td></tr>
+          <tr><td>ISI rate</td><td class="m">\(1 / \bar{\Delta}\)</td><td><span class="m">\(N \ge 2\)</span></td></tr>
+          <tr><td>CV of ISI</td><td class="m">\(s_\Delta / \bar{\Delta}\)</td><td><span class="m">\(N \ge 3\)</span> (sample standard deviation with <span class="m">\(N-2\)</span> in the denominator)</td></tr>
+          <tr><td>First spike</td><td class="m">\(t_1\)</td><td><span class="m">\(N \ge 1\)</span></td></tr>
+          <tr><td>Rheobase</td><td class="m">\(I_{\mathrm{rh}} = (\theta - V_{\mathrm{rest}})/R\)</td><td>always (a property of the parameters)</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>The mean rate and the ISI rate differ for short or irregular recordings: the mean rate counts the time before the first spike, the ISI rate does not. Readouts that are undefined are shown as n/a.</p>
+
+      <h3>Exact results used for validation</h3>
+      <p>For a constant current above the rheobase, starting from rest, the first spike occurs at</p>
+      <div class="m-block">$$t_1 = \tau_m \ln\frac{RI}{RI - (\theta - V_{\mathrm{rest}})},$$</div>
+      <p>and the steady firing rate (the f–I curve) is</p>
+      <div class="m-block">$$f(I) = \left[\,t_{\mathrm{ref}} + \tau_m \ln\frac{RI + V_{\mathrm{rest}} - V_{\mathrm{reset}}}{RI + V_{\mathrm{rest}} - \theta}\right]^{-1}, \qquad I &gt; I_{\mathrm{rh}}.$$</div>
+      <p>The f–I panel plots the ISI rate of 2 s simulations at 41 currents against this formula; a current with no spikes has a measured rate of 0, and one that gives a single spike in 2 s has no measurable rate and is omitted. The time-step panel measures <span class="m">\(|t_1^{\mathrm{sim}} - t_1|\)</span> for <span class="m">\(\Delta t \in \{1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01\}\)</span> ms and both integrators, and fits the slope of <span class="m">\(\log_{10}\)</span> error against <span class="m">\(\log_{10}\Delta t\)</span> for Euler by least squares.</p>
+    </section>
+
+    <section id="parameters">
+      <h2>Parameters</h2>
+      <div class="table-wrap">
+      <table class="params">
+        <thead><tr><th>Symbol</th><th>Parameter</th><th>Default</th><th>Lab range</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td class="m">\(\tau_m\)</td><td>Membrane time constant</td><td>20 ms</td><td>5–50 ms</td><td>How fast the voltage follows the input; <span class="m">\(\tau_m = RC\)</span></td></tr>
+          <tr><td class="m">\(\theta\)</td><td>Spike threshold</td><td>−50 mV</td><td>−60 to −40 mV</td><td>Voltage at which a spike is registered</td></tr>
+          <tr><td class="m">\(V_{\mathrm{rest}}\)</td><td>Resting potential</td><td>−65 mV</td><td>−75 to −55 mV</td><td>Voltage with no input</td></tr>
+          <tr><td class="m">\(V_{\mathrm{reset}}\)</td><td>Reset potential</td><td>−70 mV</td><td>−80 to −60 mV</td><td>Voltage right after a spike</td></tr>
+          <tr><td class="m">\(R\)</td><td>Membrane resistance</td><td>10 MΩ</td><td>5–20 MΩ</td><td>Converts current to voltage: a current <span class="m">\(I\)</span> moves the steady state by <span class="m">\(RI\)</span></td></tr>
+          <tr><td class="m">\(t_{\mathrm{ref}}\)</td><td>Refractory period</td><td>3 ms</td><td>0–10 ms</td><td>Time the voltage is held at reset after a spike; caps the rate at <span class="m">\(1/t_{\mathrm{ref}}\)</span></td></tr>
+          <tr><td class="m">\(\Delta t\)</td><td>Output time step</td><td>0.1 ms</td><td>0.01–1 ms</td><td>Sample spacing; also the step of the Euler method</td></tr>
+          <tr><td class="m">\(T\)</td><td>Recording length</td><td>200 ms</td><td>100–1000 ms</td><td>Duration of the simulation</td></tr>
+          <tr><td></td><td>Integrator</td><td>exact</td><td>exact, Euler</td><td>Numerical method (see above)</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>The defaults give a rheobase of 1.5 nA and a regular rate of about 40 Hz at 2.5 nA. They are illustrative textbook values chosen to make the behaviour easy to see, not fitted to a particular cell type.</p>
+    </section>
+
+    <section id="reproducibility">
+      <h2>Reproducibility</h2>
+      <p>Every recorded run is stored as an experiment file (JSON) with these fields:</p>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Field</th><th>Content</th></tr></thead>
+        <tbody>
+          <tr><td><code>format</code>, <code>schemaVersion</code></td><td><code>neural-tidepool-experiment</code>, version 1</td></tr>
+          <tr><td><code>engineVersion</code></td><td>Version of the simulation engine that produced the results</td></tr>
+          <tr><td><code>lab</code></td><td><code>single-neuron</code></td></tr>
+          <tr><td><code>setup.waveform</code>, <code>setup.stimulus</code></td><td>Waveform name and every stimulus parameter, including the seed</td></tr>
+          <tr><td><code>setup.membrane</code></td><td>All membrane parameters, <code>dtMs</code> and <code>method</code></td></tr>
+          <tr><td><code>setup.durationMs</code></td><td>Recording length</td></tr>
+          <tr><td><code>results</code></td><td>Spike times and the summary readouts</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>Restoring a run in the lab, or running <code>python reproduce.py file.json</code>, regenerates the stimulus, re-runs the simulation and compares the spike times with the record. With the same engine version they agree to within <span class="m">\(10^{-9}\)</span> ms. Results from a different engine version may differ, and the lab says so.</p>
+    </section>
+
+    <section id="limitations">
+      <h2>Limitations</h2>
+      <ul>
+        <li>A single compartment: there is no dendritic or axonal geometry, so signals do not propagate in space. The pulse travelling along the axon in the animation is a conceptual illustration timed to the spikes.</li>
+        <li>Spikes are events: the action-potential waveform, ion channels and the relative refractory period are not modelled.</li>
+        <li>No adaptation: after each reset the neuron forgets its history, so it cannot reproduce adaptation, bursting or rebound firing.</li>
+        <li>Parameters are fixed during a run, and the input is piecewise constant on the output grid.</li>
+        <li>The noise is a coloured Gaussian current, not a model of individual synaptic inputs.</li>
+      </ul>
+    </section>
+
+    <section id="references">
+      <h2>References</h2>
+      <ol class="refs">
+        <li>W. Gerstner, W. M. Kistler, R. Naud and L. Paninski. <i>Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.</i> Cambridge University Press, 2014. <a href="https://neuronaldynamics.epfl.ch/online/Ch1.S3.html">§1.3 Integrate-and-fire models</a>; <a href="https://neuronaldynamics.epfl.ch/online/Ch1.S4.html">§1.4 Limitations of the LIF model</a>; <a href="https://neuronaldynamics.epfl.ch/online/Ch7.S3.html">§7.3 Interval distribution and coefficient of variation</a>; <a href="https://neuronaldynamics.epfl.ch/online/Ch8.S1.html">§8.1 Noise input</a>.</li>
+        <li>G. E. Uhlenbeck and L. S. Ornstein. On the theory of the Brownian motion. <i>Physical Review</i> 36, 823 (1930).</li>
+        <li>D. T. Gillespie. Exact numerical simulation of the Ornstein–Uhlenbeck process and its integral. <i>Physical Review E</i> 54, 2084 (1996).</li>
+        <li>G. E. P. Box and M. E. Muller. A note on the generation of random normal deviates. <i>Annals of Mathematical Statistics</i> 29, 610–611 (1958).</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="colophon">
+    <p>Neural Tidepool, made by <a href="https://github.com/Yunmo0121/Neural-Tidepool">Yunmo Li</a>. Source code, tests and the Python reference engine are on GitHub.</p>
+  </footer>
+
+  <script defer src="vendor/katex/katex.min.js"></script>
+  <script defer src="vendor/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import { ENGINE_VERSION } from './js/lif.js';
+    document.getElementById('engineVersion').textContent = ENGINE_VERSION;
+    function typeset() {
+      if (!window.renderMathInElement) return setTimeout(typeset, 50);
+      window.renderMathInElement(document.body, {
+        delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false }],
+        throwOnError: false,
+      });
+    }
+    typeset();
+  </script>
+</body>
+</html>
