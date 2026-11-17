@@ -1,0 +1,109 @@
+/*
+  Neural Tidepool: lab-notebook theme.
+  VOICE   a working research notebook, not a product page
+  IDEA    graph paper with a red margin line; instruments are sheets glued onto it;
+          the oscilloscope is a taped-in figure; guidance is written in red pen
+  COLOUR  paper with blue-grey grid, navy ink for text and controls,
+          ocean blue only for data, red pen only for margin and annotations
+  TYPE    Newsreader (headings, italic), Instrument Sans (controls, numbers),
+          Caveat (red-pen notes only)
+*/
+:root {
+  --paper: #fbfaf6;
+  --grid: rgba(110, 140, 168, 0.15);
+  --margin-line: #e2a49b;
+  --pen: #b8392b;
+  --ink: #1e2a44;
+  --ink-soft: #4f5b72;
+  --ocean: #1e2a44;          /* interface accents are ink; data colours live in the canvases */
+  --ocean-deep: #1e2a44;
+  --data: #176f93;
+  --plate: #ffffff;
+  --line: #e1ded4;
+  --line-soft: #eeebe3;
+  --screen: #fdfdfb;
+  --hand: "Caveat", "Segoe Print", "Bradley Hand", cursive;
+  --r-plate: 3px;
+  --r-ctrl: 3px;
+}
+
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+/* The printed margin line of a notebook page. */
+body::before {
+  content: ""; position: fixed; top: 0; bottom: 0; left: max(44px, calc((100vw - 1480px) / 2 + 44px)); width: 1.5px;
+  background: var(--margin-line); pointer-events: none; z-index: 0;
+}
+.masthead, .intro, .bench, .colophon { position: relative; z-index: 1; padding-left: 76px; }
+@media (max-width: 820px) {
+  body::before { left: 14px; width: 1px; }
+  .masthead, .intro, .bench, .colophon { padding-left: 28px; }
+}
+
+/* Sheets glued onto the page */
+.plate, .col-left, .scope-bezel, .readouts, .chain {
+  background: var(--plate);
+  border: 1px solid var(--line);
+  border-radius: var(--r-plate);
+  box-shadow: 0 1px 1px rgba(30, 42, 68, 0.04), 0 6px 18px rgba(30, 42, 68, 0.05);
+}
+.col-left > .plate { box-shadow: none; }
+
+/* The oscilloscope is the taped-in figure */
+.scope-bezel { position: relative; border-color: var(--line); box-shadow: 0 1px 1px rgba(30, 42, 68, 0.05), 0 10px 26px rgba(30, 42, 68, 0.08); }
+.scope-bezel::before {
+  content: ""; position: absolute; top: -11px; left: 50%; width: 104px; height: 22px;
+  transform: translateX(-50%) rotate(-1.5deg);
+  background: rgba(229, 219, 190, 0.78); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+.scope-screen { background: var(--screen); border-color: var(--line-soft); }
+
+/* Type */
+.wordmark { font-style: italic; font-weight: 600; font-size: 34px; letter-spacing: -0.01em; color: var(--ink); }
+.tagline { color: var(--ink-soft); }
+.plate-head h2, .scope-head h2 {
+  font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 21px; letter-spacing: 0; color: var(--ink);
+}
+.fig-no { font-family: var(--sans); font-style: normal; font-weight: 600; font-size: 13px; color: var(--ink-soft); margin-right: 4px; }
+.plate-note { color: var(--ink-soft); }
+#intro-q { font-style: italic; color: var(--ink); }
+.intro-label { color: var(--pen); }
+.chain h2 { color: var(--pen); }
+.protocol-card h3 { font-style: italic; font-weight: 500; }
+.ch-v::before { background: var(--data); }
+
+/* Lab tabs */
+.room { color: var(--ink-soft); }
+.room.is-current { color: var(--ink); border-bottom-color: var(--ink); }
+.room small { font-family: var(--hand); font-size: 16px; font-weight: 500; color: var(--pen); border: 0; padding: 0; }
+
+/* Controls in ink */
+.segmented { background: #f3f1ea; }
+.segmented button[aria-checked="true"] { color: var(--ink); box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(30, 42, 68, 0.08); }
+.btn { background: var(--ink); border-color: var(--ink); }
+.btn.ghost { background: #fff; color: var(--ink); }
+.record-btn { border-color: var(--ink); }
+.toggle[aria-pressed="true"]::before { background-color: var(--ink); }
+.protocol-list button[aria-expanded="true"] { background: #f3f1ea; }
+.protocol-list .p-no { color: var(--ink); }
+.protocol-list .done .p-no { background: var(--ink); border-color: var(--ink); }
+.explain { background: var(--paper); border-color: var(--line); }
+.tabs button[aria-selected="true"] { background: #f3f1ea; color: var(--ink); }
+.lamp.is-firing { color: var(--pen); }
+
+/* Red-pen notes: guided mode reads like a teacher's annotations */
+.ctrl-help, .guide-note {
+  font-family: var(--hand); font-size: 18px; line-height: 1.12; font-weight: 500; color: var(--pen);
+  background: none; border: 0; padding: 0;
+}
+.guide-note { margin: 6px 0 10px; }
+.cursor-readout.is-hint { font-family: var(--hand); font-size: 18px; color: var(--pen); }
+
+/* Footer */
+.colophon { color: var(--ink-soft); }

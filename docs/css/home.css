@@ -1,0 +1,74 @@
+/* Home page: the notebook's cover and contents. Builds on notebook.css. */
+body.home::before { left: max(44px, calc((100vw - 1040px) / 2 + 44px)); }
+.home .page { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 0 28px 40px 76px; }
+.home-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 10px; }
+.brand-name { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 24px; color: var(--ink); white-space: nowrap; }
+.home-nav { display: flex; gap: 22px; font-size: 15px; }
+.home-nav a { color: var(--ink); text-decoration: none; font-weight: 500; }
+.home-nav a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+/* Hero */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 48px; align-items: center; padding: 48px 0 64px; }
+.hero h1 {
+  font-family: var(--serif); font-style: italic; font-weight: 600; font-size: clamp(56px, 8vw, 92px);
+  line-height: 0.95; letter-spacing: -0.025em; color: var(--ink);
+}
+.lede { margin-top: 24px; max-width: 34ch; font-family: var(--serif); font-size: 19px; line-height: 1.55; color: var(--ink); }
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+.hero-actions .btn { padding: 11px 20px; font-size: 14.5px; text-decoration: none; }
+
+/* Fig. 1: a sheet taped into the notebook */
+.fig-sheet {
+  position: relative; margin: 0; padding: 18px 20px 16px; background: #fff;
+  border: 1px solid var(--line); border-radius: 2px; transform: rotate(-0.8deg);
+  box-shadow: 0 1px 1px rgba(30, 42, 68, 0.05), 0 14px 30px rgba(30, 42, 68, 0.09);
+}
+.fig-sheet::before {
+  content: ""; position: absolute; top: -12px; left: 46%; width: 92px; height: 24px; transform: rotate(2deg);
+  background: rgba(229, 219, 190, 0.8); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+.fig-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--ink-soft); }
+.fig-label { font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--ink); }
+.fig-rate { font-weight: 600; font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; }
+#figCanvas { display: block; width: 100%; height: 190px; margin-top: 8px; }
+.fig-control { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: 14px; color: var(--ink); }
+.fig-control output { font-weight: 600; min-width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+.fig-sheet figcaption { margin-top: 10px; font-family: var(--serif); font-style: italic; font-size: 15px; line-height: 1.45; color: var(--ink-soft); }
+.pen-note { position: absolute; right: 4px; bottom: -40px; font-family: var(--hand); font-size: 22px; font-weight: 500; color: var(--pen); transform: rotate(-3deg); }
+
+/* Contents */
+.contents { padding-top: 12px; }
+.home h2 { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 32px; color: var(--ink); padding-bottom: 10px; border-bottom: 1.5px solid var(--ink); }
+.toc { list-style: none; margin: 0; padding: 0; }
+.toc li { border-bottom: 1px solid var(--line); }
+.toc li > a, .toc li > div { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding: 18px 4px; color: var(--ink); text-decoration: none; }
+.toc li > a:hover { background: rgba(255, 255, 255, 0.7); }
+.toc-no { font-size: 14px; font-weight: 600; color: var(--ink-soft); }
+.toc .is-open .toc-no { color: var(--pen); }
+.toc-title { display: block; font-family: var(--serif); font-size: 23px; line-height: 1.2; }
+.toc-desc { display: block; margin-top: 3px; font-family: var(--serif); font-size: 16px; color: var(--ink-soft); }
+.toc-status { font-size: 13.5px; color: var(--ink-soft); white-space: nowrap; }
+.toc .is-open .toc-status { font-family: var(--hand); font-size: 22px; font-weight: 600; color: var(--pen); }
+
+/* Principles */
+.principles { padding-top: 64px; }
+.principle-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 22px; }
+.principle-grid h3 { font-family: var(--serif); font-size: 20px; font-weight: 600; color: var(--ink); }
+.principle-grid p { margin-top: 6px; font-family: var(--serif); font-size: 16.5px; line-height: 1.55; color: #33405a; }
+.principles-more { margin-top: 22px; font-family: var(--serif); font-size: 16.5px; color: var(--ink); }
+.principles-more a, .home-foot a { color: var(--ink); }
+
+.home-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; margin-top: 72px; padding-top: 14px; border-top: 1.5px solid var(--ink); font-size: 13.5px; color: var(--ink-soft); }
+
+@media (max-width: 820px) {
+  body.home::before { left: 14px; }
+  .home .page { padding: 0 18px 32px 30px; }
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 28px 0 72px; }
+  .principle-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .toc li > a, .toc li > div { grid-template-columns: 54px minmax(0, 1fr); }
+  .toc-status { grid-column: 2; }
+  .home-nav { gap: 14px; font-size: 14px; }
+  .brand-name { font-size: 19px; }
+  .home-head .logo-mark { width: 28px; height: 28px; }
+}
+@media (prefers-reduced-motion: reduce) { .fig-sheet { transform: none; } }

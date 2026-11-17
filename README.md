@@ -18,7 +18,7 @@
   <a href="#quick-start">Quick start</a>
 </p>
 
-![Lab 1 of Neural Tidepool: stimulus controls, an animated neuron, an oscilloscope comparing two recorded runs, and guided protocols](docs/assets/screenshot.png)
+![The Neural Tidepool home page: a lab notebook on graph paper, with a live membrane-potential figure taped in](docs/assets/home.png)
 
 ## What it is
 
@@ -26,9 +26,14 @@ Neural Tidepool is a laboratory for computational neuroscience that runs in the 
 
 **Lab 1** asks: *how does a neuron turn an input current into spikes, and what limits how fast it can fire?* You stimulate a leaky integrate-and-fire neuron, watch its membrane voltage on an oscilloscope, record runs in a notebook, and compare what you measure with exact theory.
 
+The site is designed as an open lab notebook: graph paper, figures taped onto the page, and notes in red pen.
+
 It is written for students meeting neuron models for the first time, and for anyone who wants to check the numbers: every result is computed exactly, documented and reproducible.
 
 ## Lab 1: Single neuron
+
+![Lab 1: stimulus controls, an animated neuron, an oscilloscope comparing two recorded runs, and guided protocols](docs/assets/screenshot.png)
+
 
 - **Stimulus.** Six input currents: constant, step, pulse, two pulses, sine, and coloured noise with a fixed random seed.
 - **Oscilloscope.** Membrane voltage and injected current on two channels, synchronised with an animated neuron, with A/B cursors for measuring time and voltage differences.
@@ -36,7 +41,7 @@ It is written for students meeting neuron models for the first time, and for any
 - **Analysis.** The simulated f–I curve plotted against its exact formula, and the time-step accuracy of two numerical methods.
 - **Six guided protocols.** Find the rheobase, measure the f–I curve, the refractory speed limit, temporal summation, firing from noise, and how small the time step should be. Each one asks for a prediction first and ends with an explanation and textbook references.
 - **Notebook.** Record runs, overlay them on the oscilloscope, restore any run exactly, save experiment files and notebooks, and export CSV.
-- **Guided mode.** A short explanation next to every parameter and instrument for first-time users.
+- **Guided mode.** Short red-pen notes beside every parameter and instrument, like annotations in a lab notebook, for first-time users.
 
 ## Why you can trust the numbers
 
@@ -73,7 +78,7 @@ cd Neural-Tidepool
 python -m http.server --directory docs 8000
 ```
 
-Then open `http://localhost:8000`. The page must be served over HTTP, because browsers do not load JavaScript modules from `file://`.
+Then open `http://localhost:8000` for the home page, or `http://localhost:8000/lab1.html` for Lab 1. The page must be served over HTTP, because browsers do not load JavaScript modules from `file://`.
 
 ### Reproduce an experiment in Python
 
@@ -118,14 +123,16 @@ When $V$ reaches the threshold $\theta$, a spike is recorded, $V$ is reset to $V
 ```text
 Neural-Tidepool/
 ├── docs/                    The browser lab, served by GitHub Pages
-│   ├── index.html           Lab 1
+│   ├── index.html           Home page: the notebook's cover and contents
+│   ├── lab1.html            Lab 1: Single neuron
 │   ├── methods.html         Methods: model, numerics, definitions, parameters
 │   ├── js/
 │   │   ├── lif.js           Simulation engine, stimuli and theory
 │   │   ├── experiment.js    Experiment and notebook file formats
 │   │   ├── protocols.js     Guided experiments
+│   │   ├── home.js          Live figure on the home page
 │   │   └── app.js           Instruments and interface
-│   ├── css/                 Styles
+│   ├── css/                 Styles (notebook.css holds the lab-notebook theme)
 │   ├── assets/              Logo and screenshot
 │   └── vendor/              KaTeX and fonts, bundled so the site works offline
 ├── neuron.py                Python reference engine
@@ -152,7 +159,7 @@ Still to come for Lab 1: a validation page that checks every analytic result liv
 <details>
 <summary>Version history</summary>
 
-- **v0.3.1**: exact event-driven engine, reproducible experiment files and notebook, Python reproduction script, Methods page, guided mode.
+- **v0.3.1**: lab-notebook redesign with a home page, exact event-driven engine, reproducible experiment files and notebook, Python reproduction script, Methods page, guided mode.
 - **v0.3**: the browser lab bench, with stimulus waveforms, oscilloscope, notebook, protocols and analysis.
 - **v0.2**: an animated neuron whose glow follows the simulated spikes.
 - **v0.1**: a Streamlit app simulating a leaky integrate-and-fire neuron.

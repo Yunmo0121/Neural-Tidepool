@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab 1: Single neuron · Neural Tidepool</title>
+  <meta name="description" content="An interactive computational neuroscience lab bench: stimulate a leaky integrate-and-fire neuron, watch it on an oscilloscope, and record experiments." />
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="vendor/fonts/fonts.css" />
+  <link rel="stylesheet" href="css/lab.css" />
+  <link rel="stylesheet" href="css/notebook.css" />
+</head>
+<body>
+  <header class="masthead">
+    <div class="mast-top">
+      <a class="brand" href="index.html"><img src="assets/logo.svg" class="logo-mark" alt="" width="38" height="38" /><h1 class="wordmark">Neural Tidepool</h1></a>
+      <p class="tagline">Interactive experiments in computational neuroscience</p>
+      <div class="mast-tools">
+        <button id="guidedBtn" type="button" class="toggle" aria-pressed="false">Guided mode</button>
+        <a href="methods.html">Methods</a>
+        <a href="https://github.com/Yunmo0121/Neural-Tidepool">GitHub</a>
+      </div>
+    </div>
+    <div class="mast-row">
+      <nav class="rooms" aria-label="Labs">
+        <a class="room is-current" aria-current="page" href="lab1.html">Lab 1<span>Single neuron</span></a>
+        <span class="room is-planned" title="Two neurons joined by a synapse.">Lab 2<span>Synapse</span><small>Coming soon</small></span>
+        <span class="room is-planned" title="A network of coupled neurons that fall into step.">Lab 3<span>Synchrony</span><small>Coming soon</small></span>
+        <span class="room is-planned" title="Learning in spiking networks: STDP and surrogate gradients.">Lab 4<span>Learning</span><small>Coming soon</small></span>
+        <span class="room is-planned" title="A biophysical neuron with real action potentials.">Lab 5<span>Hodgkin–Huxley</span><small>Coming soon</small></span>
+      </nav>
+    </div>
+  </header>
+
+  <section class="intro" aria-labelledby="intro-q">
+    <div class="intro-line">
+      <span class="intro-label">Lab 1 question</span>
+      <p id="intro-q">How does a neuron turn an input current into spikes, and what limits how fast it can fire?</p>
+      <button id="introToggle" type="button" class="text-btn" aria-expanded="false" aria-controls="introChain">How this lab works</button>
+    </div>
+    <ol class="chain" id="introChain" hidden>
+      <li>
+        <h2>Model</h2>
+        <p>A leaky integrate-and-fire neuron, <span class="math">τ dV/dt = V<sub>rest</sub> − V + RI</span>. When V reaches θ it spikes, resets to V<sub>reset</sub> and pauses for t<sub>ref</sub>.</p>
+      </li>
+      <li>
+        <h2>Experiment</h2>
+        <p>Inject a current with the Stimulus controls and record the membrane voltage on the oscilloscope. The protocols give step-by-step procedures.</p>
+      </li>
+      <li>
+        <h2>Observation</h2>
+        <p>Watch the voltage relax towards V<sub>∞</sub> = V<sub>rest</sub> + RI, cross θ and reset, and see how the firing rate changes with the current.</p>
+      </li>
+      <li>
+        <h2>Explanation</h2>
+        <p>Each protocol ends with an explanation, and the <a href="methods.html">Methods</a> page gives every equation and definition.</p>
+      </li>
+    </ol>
+  </section>
+
+  <main class="bench">
+  <div class="rig">
+   <div class="col col-left">
+    <!-- Stimulator -->
+    <section class="plate stimulator" aria-labelledby="stim-title">
+      <div class="plate-head">
+        <h2 id="stim-title">Stimulus</h2>
+        <span class="plate-note">Injected current</span>
+      </div>
+      <div class="segmented" role="radiogroup" aria-label="Stimulus waveform" id="waveforms"></div>
+      <div id="stimParams" class="controls"></div>
+    </section>
+
+    <!-- Membrane -->
+    <section class="plate membrane" aria-labelledby="mem-title">
+      <div class="plate-head">
+        <h2 id="mem-title">Membrane</h2>
+      </div>
+      <div id="memParams" class="controls"></div>
+      <details class="advanced">
+        <summary>Advanced parameters</summary>
+        <div id="advParams" class="controls"></div>
+        <p class="guide-note">exact = solves the equation; Euler = approximates it, kept for comparison</p>
+        <label class="select-row">Integrator
+          <select id="methodSelect">
+            <option value="exact" selected>Exact (exponential)</option>
+            <option value="euler">Forward Euler</option>
+          </select>
+        </label>
+        <label class="select-row">Time step, dt
+          <select id="dtSelect">
+            <option value="0.01">0.01 ms</option><option value="0.05">0.05 ms</option>
+            <option value="0.1" selected>0.1 ms</option><option value="0.2">0.2 ms</option>
+            <option value="0.5">0.5 ms</option><option value="1">1 ms</option>
+          </select>
+        </label>
+      </details>
+      <button class="text-btn" id="resetBench" type="button">Restore defaults</button>
+    </section>
+
+   </div>
+   <div class="col col-main">
+    <!-- Specimen -->
+    <section class="plate specimen" aria-labelledby="spec-title">
+      <h2 id="spec-title" class="sr-only">Specimen</h2>
+      <svg id="neuron" viewBox="0 0 940 260" role="img" aria-label="Stylised neuron. The cell body glows and a pulse travels along the axon each time the model spikes.">
+        <defs>
+          <linearGradient id="somaFill" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#e1f9fc"/><stop offset=".58" stop-color="#91d8e7"/><stop offset="1" stop-color="#56a9ca"/></linearGradient>
+          <radialGradient id="halo"><stop stop-color="#59c9ec" stop-opacity=".7"/><stop offset=".6" stop-color="#69d2ee" stop-opacity=".22"/><stop offset="1" stop-color="#69d2ee" stop-opacity="0"/></radialGradient>
+          <radialGradient id="signal"><stop stop-color="#fff" stop-opacity=".95"/><stop offset=".18" stop-color="#d9fbff" stop-opacity=".92"/><stop offset=".55" stop-color="#43c8f4" stop-opacity=".6"/><stop offset="1" stop-color="#43c8f4" stop-opacity="0"/></radialGradient>
+          <filter id="softGlow" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="8"/></filter>
+        </defs>
+        <!-- recording electrode -->
+        <g class="electrode">
+          <path d="M318 8 L292 146" stroke="#9ab9c6" stroke-width="7" stroke-linecap="round"/>
+          <path d="M318 8 L292 146" stroke="#e9f6fa" stroke-width="3" stroke-linecap="round"/>
+          <text x="326" y="26" class="svg-label">electrode</text>
+        </g>
+        <g class="nbranch" transform="translate(0 -20)">
+          <path d="M271 170 Q230 155 206 134 T149 120 Q121 123 96 99"/>
+          <path d="M207 134 Q177 91 162 70 T131 37" class="fine"/>
+          <path d="M160 70 Q128 69 106 50" class="fine"/>
+          <path d="M206 134 Q177 149 154 176 T115 188" class="fine"/>
+          <path d="M265 185 Q225 201 206 223 T160 250 Q143 268 110 267"/>
+          <path d="M206 223 Q178 221 158 207 T120 210" class="fine"/>
+          <path d="M243 157 Q225 117 234 91 T221 47"/>
+          <path d="M234 91 Q254 71 255 39" class="fine"/>
+        </g>
+        <g transform="translate(0 -20)">
+          <path id="axonPath" class="nerve" d="M313 180 C382 151 436 196 502 178 S638 167 710 181 S771 177 805 160" />
+          <path class="nbranch" d="M805 160 Q840 137 862 117 T902 108"/>
+          <path class="nbranch fine" d="M842 136 Q875 150 908 142"/>
+          <path class="nbranch" d="M805 160 Q839 181 869 196 T902 216"/>
+          <path class="nbranch fine" d="M867 195 Q880 221 878 248"/>
+          <path class="myelin" d="M395 168 l-5 6 M477 180 l-5 5 M564 169 l-5 6 M661 174 l-5 6 M745 183 l-5 5" />
+          <circle id="aura" cx="283" cy="180" r="78" fill="url(#halo)" opacity=".17"/>
+          <circle id="flash" cx="283" cy="180" r="55" fill="#36baf0" opacity="0" filter="url(#softGlow)"/>
+          <circle class="core" cx="283" cy="180" r="35"/>
+          <circle cx="278" cy="173" r="15" fill="#dff8fc" opacity=".85"/>
+          <circle id="nucleus" cx="278" cy="173" r="9" fill="#64c0d7" opacity=".85"/>
+          <circle cx="272" cy="166" r="4" fill="white" opacity=".7" />
+          <g id="pulses"></g>
+          <text x="248" y="245" class="svg-label">soma</text>
+          <text x="572" y="214" class="svg-label">axon</text>
+          <text x="80" y="268" class="svg-label">dendrites</text>
+        </g>
+      </svg>
+      <p class="guide-note">the cell body glows at every spike; the pulse on the axon is only an illustration</p>
+      <div class="transport">
+        <button id="playBtn" type="button" class="icon-btn" aria-label="Pause">❚❚</button>
+        <button id="replayBtn" type="button" class="icon-btn" aria-label="Replay from the start">↺</button>
+        <input id="scrub" type="range" min="0" max="200" step="0.1" value="0" aria-label="Simulation time" />
+        <output id="clock" class="clock">0.0 ms</output>
+        <label class="speed">Speed
+          <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+        </label>
+        <span id="firingLamp" class="lamp" aria-live="off">Integrating</span>
+      </div>
+    </section>
+
+    <!-- Oscilloscope -->
+    <section class="scope-unit" aria-labelledby="scope-title">
+      <div class="scope-bezel">
+        <div class="scope-head">
+          <h2 id="scope-title"><span class="fig-no">Fig. 1</span> Oscilloscope</h2>
+          <div class="channels">
+            <span class="ch ch-v">CH1 membrane voltage</span>
+            <span class="ch ch-i">CH2 injected current</span>
+          </div>
+        </div>
+        <p class="guide-note">blue = voltage, amber = injected current, dashed line = threshold θ, triangles = spikes</p>
+        <canvas id="scope" class="scope-screen" role="img" aria-label="Oscilloscope trace of membrane voltage and injected current"></canvas>
+        <div class="scope-foot">
+          <span id="cursorReadout" class="cursor-readout is-hint">click the trace twice to measure Δt and ΔV</span>
+          <button id="clearCursors" type="button" class="scope-btn" hidden>Clear cursors</button>
+        </div>
+      </div>
+      <dl class="readouts" id="readouts"></dl>
+    </section>
+   </div>
+
+    <!-- Analysis -->
+    <section class="plate analysis" aria-labelledby="ana-title">
+      <div class="plate-head">
+        <h2 id="ana-title"><span class="fig-no">Fig. 2</span> Analysis</h2>
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tab-fi" aria-selected="true" aria-controls="anaCanvas">f–I curve</button>
+          <button role="tab" id="tab-dt" aria-selected="false" aria-controls="anaCanvas">Time step accuracy</button>
+        </div>
+      </div>
+      <canvas id="anaCanvas" class="ana-canvas" role="img"></canvas>
+      <div id="anaLegend" class="ana-legend"></div>
+      <p id="anaCaption" class="ana-caption"></p>
+    </section>
+  </div>
+
+   <aside class="col col-side">
+    <!-- Protocols -->
+    <section class="plate protocols" aria-labelledby="proto-title">
+      <div class="plate-head">
+        <h2 id="proto-title">Protocols</h2>
+      </div>
+      <ol id="protocolList" class="protocol-list"></ol>
+      <article id="protocolCard" class="protocol-card" hidden></article>
+    </section>
+
+    <!-- Notebook -->
+    <section class="plate notebook" aria-labelledby="nb-title">
+      <div class="plate-head">
+        <h2 id="nb-title">Notebook</h2>
+      </div>
+      <p class="guide-note">record a run, change one thing, record again, then compare the traces</p>
+      <button id="recordBtn" type="button" class="record-btn"><span class="rec-dot"></span>Record run</button>
+      <div class="nb-actions">
+        <button id="openFileBtn" type="button" class="text-btn">Open file</button>
+        <button id="saveNotebook" type="button" class="text-btn" disabled>Save notebook</button>
+        <button id="exportCsv" type="button" class="text-btn" disabled>Export CSV</button>
+        <input id="openFile" type="file" accept=".json,application/json" hidden />
+      </div>
+      <p id="nbStatus" class="nb-status" role="status" aria-live="polite"></p>
+      <ul id="runs" class="runs"></ul>
+      <p id="runsEmpty" class="empty">Recorded runs stay on the oscilloscope as overlays, so you can compare conditions. Each run keeps its full setup and can be restored or saved as an experiment file.</p>
+    </section>
+   </aside>
+  </main>
+
+  <footer class="colophon">
+    <p>Leaky integrate-and-fire neuron, integrated exactly between events (forward Euler available for comparison). Input current is held constant within each time step. The glow timing comes from simulated spikes; the pulse moving along the axon is a conceptual illustration, since a single-compartment model has no spatial propagation.</p>
+    <p>Neural Tidepool v0.3.1, made by <a href="https://github.com/Yunmo0121/Neural-Tidepool">Yunmo Li</a>. Built with Python and JavaScript.</p>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

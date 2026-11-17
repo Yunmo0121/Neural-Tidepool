@@ -480,8 +480,9 @@ $('clearCursors').addEventListener('click', () => { cursors = []; renderCursorRe
 function renderCursorReadout() {
   const out = $('cursorReadout');
   $('clearCursors').hidden = cursors.length === 0;
+  out.classList.toggle('is-hint', cursors.length === 0);
   if (!cursors.length) {
-    out.textContent = 'Click the trace to place measurement cursors A and B.';
+    out.textContent = 'click the trace twice to measure Δt and ΔV';
     return;
   }
   const parts = cursors.map((c, k) => `${k ? 'B' : 'A'} <b>${c.toFixed(1)} ms, ${fmt(voltageAt(c), 1)} mV</b>`);
